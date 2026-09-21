@@ -157,7 +157,7 @@ export default function OrderCard({ order, isKitchen = false, queueIndex }: Orde
   }
 
   // ─────────────────────────────────────────────
-  // VISTA MESERO — con datos cliente, altura fija
+  // VISTA MESERO — con datos cliente, altura adaptativa
   // ─────────────────────────────────────────────
   const mColors = {
     card: isPending ? 'bg-red-50 border-red-200' : isPreparing ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200',
@@ -174,38 +174,38 @@ export default function OrderCard({ order, isKitchen = false, queueIndex }: Orde
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       layout
-      className={`border-2 rounded-3xl flex flex-col h-[320px] ${mColors.card} transition-colors duration-300`}
+      className={`border-2 rounded-2xl sm:rounded-3xl flex flex-col min-h-[300px] sm:h-[320px] ${mColors.card} transition-colors duration-300 overflow-hidden`}
     >
-      {/* ── Header compacto (altura fija) ── */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
-        <div className="flex items-center gap-2">
-          <p className={`text-lg font-black ${mColors.text}`}>
+      {/* ── Header compacto ── */}
+      <div className="flex items-center justify-between px-3.5 sm:px-5 pt-3.5 sm:pt-4 pb-2 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <p className={`text-base sm:text-lg font-black ${mColors.text} truncate`}>
             {order.orderQuantity} {order.orderQuantity === 1 ? 'Orden' : 'Órdenes'}
           </p>
-          <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wide ${mColors.badge}`}>
+          <span className={`text-[9px] sm:text-[10px] font-black px-2 py-0.5 sm:py-1 rounded-lg uppercase tracking-wide ${mColors.badge} shrink-0`}>
             {order.isDelivery ? 'Domicilio' : order.isTakeaway ? 'Llevar' : 'Comedor'}
           </span>
         </div>
-        <span className={`text-xs font-semibold flex items-center gap-1 ${mColors.text} opacity-60`}>
+        <span className={`text-[11px] sm:text-xs font-semibold flex items-center gap-1 ${mColors.text} opacity-60 shrink-0 ml-1`}>
           <Clock className="w-3 h-3" />
           {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
 
-      {/* ── Info cliente en fila horizontal (altura fija) ── */}
-      <div className="px-5 pb-2 shrink-0 h-10 flex items-center gap-3 overflow-hidden">
+      {/* ── Info cliente en fila horizontal ── */}
+      <div className="px-3.5 sm:px-5 pb-2 shrink-0 min-h-[36px] flex items-center gap-2.5 overflow-hidden flex-wrap">
         {order.customerName && (
-          <span className={`flex items-center gap-1 text-sm font-bold ${mColors.text} truncate`}>
+          <span className={`flex items-center gap-1 text-xs sm:text-sm font-bold ${mColors.text} truncate`}>
             <User className="w-3.5 h-3.5 shrink-0" /> {order.customerName}
           </span>
         )}
         {order.phone && (
-          <span className={`flex items-center gap-1 text-xs font-semibold ${mColors.text} opacity-60 shrink-0`}>
+          <span className={`flex items-center gap-1 text-[11px] sm:text-xs font-semibold ${mColors.text} opacity-60 shrink-0`}>
             <Phone className="w-3 h-3" /> {order.phone}
           </span>
         )}
         {order.isDelivery && order.deliveryAddress && (
-          <span className={`flex items-center gap-1 text-xs font-semibold ${mColors.text} opacity-60 truncate`}>
+          <span className={`flex items-center gap-1 text-[11px] sm:text-xs font-semibold ${mColors.text} opacity-60 truncate w-full`}>
             <MapPin className="w-3 h-3 shrink-0" /> {order.deliveryAddress}
           </span>
         )}
@@ -214,40 +214,40 @@ export default function OrderCard({ order, isKitchen = false, queueIndex }: Orde
         )}
       </div>
 
-        {/* ── Zona de salsas — 2 columnas, sin scroll, filtrar vacíos ── */}
-        <div className="flex-1 px-5 min-h-0 overflow-hidden">
-          <div className="grid grid-cols-2 gap-x-3 gap-y-2 h-full content-start">
-            {isMatrix
-              ? (flavors as string[][]).filter((f: string[]) => f.length > 0).map((orderFlavors: string[], i: number) => (
-                  <div key={i} className="flex flex-col gap-0.5">
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${mColors.text} opacity-40`}>
-                      Orden {i + 1}
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {orderFlavors.map((f: string, j: number) => (
-                        <span key={j} className="px-2 py-0.5 rounded-md font-bold bg-white shadow-sm text-slate-700 text-[11px] leading-4">{f}</span>
-                      ))}
-                    </div>
+      {/* ── Zona de salsas — 2 columnas ── */}
+      <div className="flex-1 px-3.5 sm:px-5 min-h-0 overflow-hidden py-1">
+        <div className="grid grid-cols-2 gap-x-2 sm:gap-x-3 gap-y-1.5 sm:gap-y-2 h-full content-start">
+          {isMatrix
+            ? (flavors as string[][]).filter((f: string[]) => f.length > 0).map((orderFlavors: string[], i: number) => (
+                <div key={i} className="flex flex-col gap-0.5">
+                  <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${mColors.text} opacity-40`}>
+                    Orden {i + 1}
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {orderFlavors.map((f: string, j: number) => (
+                      <span key={j} className="px-1.5 sm:px-2 py-0.5 rounded-md font-bold bg-white shadow-sm text-slate-700 text-[10px] sm:text-[11px] leading-4">{f}</span>
+                    ))}
                   </div>
-                ))
-              : (flavors as string[]).map((f: string, i: number) => (
-                  <span key={i} className="px-2 py-0.5 rounded-md font-bold bg-white shadow-sm text-slate-700 text-[11px] leading-4 self-start">{f}</span>
-                ))
-            }
-          </div>
+                </div>
+              ))
+            : (flavors as string[]).map((f: string, i: number) => (
+                <span key={i} className="px-1.5 sm:px-2 py-0.5 rounded-md font-bold bg-white shadow-sm text-slate-700 text-[10px] sm:text-[11px] leading-4 self-start">{f}</span>
+              ))
+          }
         </div>
+      </div>
 
-      {/* ── Acciones (altura fija, siempre al fondo) ── */}
-      <div className="px-5 pb-5 pt-3 space-y-2 shrink-0">
+      {/* ── Acciones (siempre al fondo) ── */}
+      <div className="px-3.5 sm:px-5 pb-3.5 sm:pb-5 pt-2 sm:pt-3 space-y-1.5 sm:space-y-2 shrink-0">
         {/* Estado */}
-        <div className={`w-full h-12 flex items-center justify-center text-base font-black rounded-2xl bg-white/60 ${mColors.text}`}>
+        <div className={`w-full h-10 sm:h-12 flex items-center justify-center text-sm sm:text-base font-black rounded-xl sm:rounded-2xl bg-white/60 ${mColors.text}`}>
           {isPending ? 'En espera' : isPreparing ? 'Preparando...' : '¡Entregado!'}
         </div>
 
         {/* Cancelar */}
         {!isDelivered && (
           confirmCancel ? (
-            <div className="flex gap-2 h-10">
+            <div className="flex gap-2 h-9 sm:h-10">
               <button
                 onClick={() => setConfirmCancel(false)}
                 className={`flex-1 rounded-xl font-bold text-xs transition-colors bg-white/60 hover:bg-white/80 ${mColors.text}`}
@@ -265,7 +265,7 @@ export default function OrderCard({ order, isKitchen = false, queueIndex }: Orde
           ) : (
             <button
               onClick={() => setConfirmCancel(true)}
-              className={`w-full h-10 rounded-xl bg-white/40 hover:bg-red-100 ${mColors.text} hover:text-red-600 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors`}
+              className={`w-full h-8 sm:h-10 rounded-xl bg-white/40 hover:bg-red-100 ${mColors.text} hover:text-red-600 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors`}
             >
               <X className="w-3.5 h-3.5" /> Cancelar pedido
             </button>
@@ -275,3 +275,4 @@ export default function OrderCard({ order, isKitchen = false, queueIndex }: Orde
     </motion.div>
   )
 }
+

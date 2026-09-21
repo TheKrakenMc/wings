@@ -12,6 +12,71 @@ export async function getActiveShift() {
   return shift
 }
 
+export async function getShiftByDate(dateStr: string) {
+  if (!dateStr) return null
+  const [year, month, day] = dateStr.split('-').map(Number)
+  if (!year || !month || !day) return null
+
+  const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
+  const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))
+
+  const shift = await prisma.shiftInventory.findFirst({
+    where: {
+      date: {
+        gte: startOfDay,
+        lte: endOfDay
+      }
+    },
+    orderBy: { date: 'desc' }
+  })
+  return shift
+}
+
+export async function getActiveShiftDates() {
+  const shifts = await prisma.shiftInventory.findMany({
+    select: {
+      date: true,
+      remainingRawOrders: true,
+    }
+  })
+
+  const result: Record<string, number> = {}
+  for (const s of shifts) {
+    const d = new Date(s.date)
+    const year = d.getUTCFullYear()
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(d.getUTCDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
+    result[dateStr] = s.remainingRawOrders
+  }
+  return result
+}
+
+
+export async function startShiftForDate(dateStr: string, initialOrders: number) {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const shiftDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
+
+  // Desactivar turnos anteriores activos si se desea, o mantener activo el turno actual
+  await prisma.shiftInventory.updateMany({
+    where: { isActive: true },
+    data: { isActive: false }
+  })
+
+  // Crear nuevo turno para la fecha elegida
+  const shift = await prisma.shiftInventory.create({
+    data: {
+      date: shiftDate,
+      initialRawOrders: initialOrders,
+      remainingRawOrders: initialOrders,
+      isActive: true
+    }
+  })
+
+  revalidatePath('/')
+  return shift
+}
+
 export async function startShift(initialOrders: number) {
   // Desactivar turnos anteriores
   await prisma.shiftInventory.updateMany({
