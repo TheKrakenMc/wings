@@ -4,13 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma skills sync || exit 0"
+    "postinstall": "prisma generate && (prisma skills sync || exit 0)"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
+    "@prisma/client": "^5.22.0",
     "framer-motion": "^13.4.0",
     "lucide-react": "^1.47.0",
     "next": "14.2.35",
@@ -21,7 +22,6 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@prisma/client": "^5.22.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
