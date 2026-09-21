@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model ShiftInventory {
+  id                 String   @id @default(uuid())
+  date               DateTime @default(now())
+  initialRawOrders   Int
+  remainingRawOrders Int
+  isActive           Boolean  @default(true)
+}
+
+model Product {
+  id        String @id @default(uuid())
+  name      String @default("Orden de Alitas - 5 pz")
+  basePrice Float
+}
+
+model Flavor {
+  id   String @id @default(uuid())
+  name String @unique
+}
+
+enum OrderStatus {
+  PENDING
+  PREPARING
+  DELIVERED
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  customerName    String?
+  phone           String?
+  isDelivery      Boolean     @default(false)
+  deliveryAddress String?
+  orderQuantity   Int
+  flavors         Json
+  totalCost       Float
+  isPaid          Boolean     @default(false)
+  isTakeaway      Boolean?    @default(false)
+  status          OrderStatus @default(PENDING)
+  
+  createdAt       DateTime    @default(now())
+  preparingAt     DateTime?
+  deliveredAt     DateTime?
+}
