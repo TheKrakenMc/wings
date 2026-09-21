@@ -7,16 +7,17 @@ import * as z from 'zod'
 import { createOrder } from '@/app/actions'
 import { Check, Send, ChevronRight } from 'lucide-react'
 import { mutate } from 'swr'
+import { Flavor } from '@prisma/client'
 
 const orderSchema = z.object({
   customerName: z.string().optional(),
   phone: z.string().optional(),
-  isDelivery: z.boolean().default(false),
+  isDelivery: z.boolean(),
   deliveryAddress: z.string().optional(),
   orderQuantity: z.number().min(1, 'Debe pedir al menos 1 orden'),
   // flavors: un array por cada orden, cada una con 1-2 salsas
   flavors: z.array(z.array(z.string()).min(1, 'Cada orden necesita al menos 1 salsa').max(2)),
-  isTakeaway: z.boolean().default(false)
+  isTakeaway: z.boolean()
 }).superRefine((data, ctx) => {
   if (data.isDelivery && (!data.deliveryAddress || data.deliveryAddress.trim() === '')) {
     ctx.addIssue({
@@ -37,7 +38,7 @@ const orderSchema = z.object({
 
 type OrderFormValues = z.infer<typeof orderSchema>
 
-export default function OrderForm({ flavors, maxOrders, onClose }: { flavors: any[], maxOrders: number, onClose: () => void }) {
+export default function OrderForm({ flavors, maxOrders, onClose }: { flavors: Flavor[], maxOrders: number, onClose: () => void }) {
   const [loading, setLoading] = useState(false)
   const [activeOrderIdx, setActiveOrderIdx] = useState(0)
 
@@ -66,6 +67,7 @@ export default function OrderForm({ flavors, maxOrders, onClose }: { flavors: an
     }
     // Resetear índice activo si queda fuera de rango
     if (activeOrderIdx >= orderQuantity) setActiveOrderIdx(orderQuantity - 1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderQuantity])
 
   const onSubmit = async (data: OrderFormValues) => {
@@ -77,8 +79,8 @@ export default function OrderForm({ flavors, maxOrders, onClose }: { flavors: an
       mutate('orders')
       mutate('activeShift')
       onClose()
-    } catch (error: any) {
-      alert(error.message || 'Error al crear la orden')
+    } catch (error: unknown) {
+      alert((error as Error).message || 'Error al crear la orden')
     } finally {
       setLoading(false)
     }

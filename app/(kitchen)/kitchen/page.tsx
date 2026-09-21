@@ -5,7 +5,7 @@ import { getOrders } from '@/app/actions'
 import OrderCard from '@/app/components/OrderCard'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 
 export default function KitchenPage() {
   const { data: orders } = useSWR('orders', getOrders, { refreshInterval: 2000 })

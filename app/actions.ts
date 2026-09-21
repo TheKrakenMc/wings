@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { OrderStatus } from '@prisma/client'
+import { OrderStatus, Prisma } from '@prisma/client'
 
 export async function getActiveShift() {
   const shift = await prisma.shiftInventory.findFirst({
@@ -71,7 +71,7 @@ export async function createOrder(data: CreateOrderInput) {
       isDelivery: data.isDelivery,
       deliveryAddress: data.deliveryAddress || null,
       orderQuantity: data.orderQuantity,
-      flavors: data.flavors as any, // string[][] serializado como Json
+      flavors: data.flavors as unknown as Prisma.InputJsonValue, // string[][] serializado como Json
       isTakeaway: data.isTakeaway ?? false,
       totalCost: data.totalCost,
       status: OrderStatus.PENDING
@@ -95,7 +95,7 @@ export async function getOrders() {
 }
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
-  const dataToUpdate: any = { status }
+  const dataToUpdate: Prisma.OrderUpdateInput = { status }
 
   if (status === OrderStatus.PREPARING) {
     dataToUpdate.preparingAt = new Date()

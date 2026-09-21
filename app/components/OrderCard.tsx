@@ -3,12 +3,12 @@
 import { motion } from 'framer-motion'
 import { Check, ChefHat, Clock, MapPin, Phone, User, X } from 'lucide-react'
 import { updateOrderStatus, cancelOrder } from '@/app/actions'
-import { OrderStatus } from '@prisma/client'
+import { OrderStatus, Order } from '@prisma/client'
 import { useState } from 'react'
 import { mutate } from 'swr'
 
 type OrderCardProps = {
-  order: any
+  order: Order & { flavors: unknown }
   isKitchen?: boolean
   queueIndex?: number
 }
@@ -36,8 +36,8 @@ export default function OrderCard({ order, isKitchen = false, queueIndex }: Orde
       await cancelOrder(order.id)
       mutate('orders')
       mutate('activeShift')
-    } catch (e: any) {
-      alert(e.message || 'Error al cancelar')
+    } catch (e: unknown) {
+      alert((e as Error).message || 'Error al cancelar')
     } finally {
       setCancelling(false)
       setConfirmCancel(false)
