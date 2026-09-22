@@ -112,23 +112,36 @@ type CreateOrderInput = {
   totalCost: number
 }
 
-export async function createOrder(data: CreateOrderInput) {
-  const activeShift = await getActiveShift()
+export async function createOrder(data: CreateOrderInput, targetDateStr?: string) {
+  const activeShift = targetDateStr ? await getShiftByDate(targetDateStr) : await getActiveShift()
   if (!activeShift) {
-    throw new Error('No hay un turno activo')
+    throw new Error('No hay un turno registrado para esta fecha')
   }
 
   if (activeShift.remainingRawOrders < data.orderQuantity) {
-    throw new Error('No hay suficientes alitas en inventario')
+    throw new Error('No hay suficientes alitas en inventario para esta fecha')
   }
 
-  // Restar inventario
+  // Restar inventario del turno de la fecha correspondiente
   await prisma.shiftInventory.update({
     where: { id: activeShift.id },
     data: { remainingRawOrders: activeShift.remainingRawOrders - data.orderQuantity }
   })
 
-  // Crear orden — construir explícitamente para que Prisma tipifique Json correctamente
+  // Determinar la fecha de creación según la fecha seleccionada
+  let createdAt: Date | undefined = undefined
+  if (targetDateStr) {
+    const [year, month, day] = targetDateStr.split('-').map(Number)
+    if (year && month && day) {
+      const now = new Date()
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+      if (targetDateStr !== todayStr) {
+        createdAt = new Date(Date.UTC(year, month - 1, day, now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()))
+      }
+    }
+  }
+
+  // Crear orden
   const order = await prisma.order.create({
     data: {
       customerName: data.customerName || null,
@@ -136,23 +149,39 @@ export async function createOrder(data: CreateOrderInput) {
       isDelivery: data.isDelivery,
       deliveryAddress: data.deliveryAddress || null,
       orderQuantity: data.orderQuantity,
-      flavors: data.flavors as unknown as Prisma.InputJsonValue, // string[][] serializado como Json
+      flavors: data.flavors as unknown as Prisma.InputJsonValue,
       isTakeaway: data.isTakeaway ?? false,
       totalCost: data.totalCost,
-      status: OrderStatus.PENDING
+      status: OrderStatus.PENDING,
+      ...(createdAt ? { createdAt } : {})
     }
   })
 
+  revalidatePath('/')
   return order
 }
 
-export async function getOrders() {
-  return await prisma.order.findMany({
-    where: {
-      status: {
-        in: [OrderStatus.PENDING, OrderStatus.PREPARING]
+export async function getOrders(dateStr?: string) {
+  const where: Prisma.OrderWhereInput = {
+    status: {
+      in: [OrderStatus.PENDING, OrderStatus.PREPARING]
+    }
+  }
+
+  if (dateStr) {
+    const [year, month, day] = dateStr.split('-').map(Number)
+    if (year && month && day) {
+      const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
+      const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))
+      where.createdAt = {
+        gte: startOfDay,
+        lte: endOfDay
       }
-    },
+    }
+  }
+
+  return await prisma.order.findMany({
+    where,
     orderBy: {
       createdAt: 'asc' // FIFO
     }

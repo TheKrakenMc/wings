@@ -38,7 +38,7 @@ const orderSchema = z.object({
 
 type OrderFormValues = z.infer<typeof orderSchema>
 
-export default function OrderForm({ flavors, maxOrders, onClose }: { flavors: Flavor[], maxOrders: number, onClose: () => void }) {
+export default function OrderForm({ flavors, maxOrders, selectedDate, onClose }: { flavors: Flavor[], maxOrders: number, selectedDate?: string, onClose: () => void }) {
   const [loading, setLoading] = useState(false)
   const [activeOrderIdx, setActiveOrderIdx] = useState(0)
 
@@ -75,7 +75,11 @@ export default function OrderForm({ flavors, maxOrders, onClose }: { flavors: Fl
     try {
       const basePrice = 85.00
       const totalCost = basePrice * data.orderQuantity
-      await createOrder({ ...data, totalCost })
+      await createOrder({ ...data, totalCost }, selectedDate)
+      if (selectedDate) {
+        mutate(['orders', selectedDate])
+        mutate(['shiftByDate', selectedDate])
+      }
       mutate('orders')
       mutate('activeShift')
       onClose()
